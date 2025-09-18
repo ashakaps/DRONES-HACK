@@ -1,0 +1,10 @@
+venv/
+.venv/
+.git/
+.gitignore
+.vscode/
+__pycache__/
+*.pyc
+*.pyo
+*.log
+.DS_Store
