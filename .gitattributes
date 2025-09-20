@@ -1,0 +1,10 @@
+# перевод строк к одному виду
+* text=auto eol=lf
+
+# CRLF (для скриптов винду)
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# LF
+*.py text eol=lf
+*.ipynb text eol=lf
