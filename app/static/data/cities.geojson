@@ -1,0 +1,25 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    { "type": "Feature",
+      "properties": { "name": "Москва" },
+      "geometry": { "type": "Point", "coordinates": [37.617635, 55.755814] }
+    },
+    { "type": "Feature",
+      "properties": { "name": "Санкт-Петербург" },
+      "geometry": { "type": "Point", "coordinates": [30.314997, 59.938784] }
+    },
+    { "type": "Feature",
+      "properties": { "name": "Казань" },
+      "geometry": { "type": "Point", "coordinates": [49.106414, 55.796127] }
+    },
+    { "type": "Feature",
+      "properties": { "name": "Новосибирск" },
+      "geometry": { "type": "Point", "coordinates": [82.92043, 55.030199] }
+    },
+    { "type": "Feature",
+      "properties": { "name": "Екатеринбург" },
+      "geometry": { "type": "Point", "coordinates": [60.597465, 56.838011] }
+    }
+  ]
+}

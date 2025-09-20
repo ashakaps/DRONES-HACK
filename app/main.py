@@ -1,10 +1,13 @@
-
-import os
+import os, logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routes import health, ui, ws
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
-app = FastAPI(title="DroneRadar API", version="0.1.0")
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger("app")
+
+app = FastAPI(title="DroneRadar API", version="0.2.0")
 
 # CORS
 origins = os.getenv("CORS_ORIGINS", "").split(",") if os.getenv("CORS_ORIGINS") else ["*"]
@@ -16,7 +19,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Routers
-app.include_router(health.router, prefix="/health", tags=["health"])
-app.include_router(ui.router, prefix="/ui", tags=["ui"])
-app.include_router(ws.router, tags=["ws"])
+# статика
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
+# index.html
+@app.get("/")
+async def serve_frontend():
+    index_path = os.path.join("app", "static", "index.html")
+    return FileResponse(index_path)
+
+# health
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+# ui и ws пока не подключаем, если нужны — добавим отдельно
