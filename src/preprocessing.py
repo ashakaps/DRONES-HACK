@@ -1,6 +1,6 @@
-import pandas as pd
-import re
 import os
+import re
+import pandas as pd
 
 # абсолютный путь к папке проекта
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -8,76 +8,98 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # путь к папке datasets
 DATA_DIR = os.path.join(BASE_DIR, "datasets")
 
-# читаем файлы
-df_2024_per_city = pd.read_excel(
-    os.path.join(DATA_DIR, "2024_v2.xlsx"), sheet_name=None
-)
-df_2025_per_city = pd.read_excel(
-    os.path.join(DATA_DIR, "2025_v2.xlsx"), sheet_name=None
-)
+# проверка наличия исходных файлов
+path_2024 = os.path.join(DATA_DIR, "2024_v2.xlsx")
+path_2025 = os.path.join(DATA_DIR, "2025_v2.xlsx")
+if not os.path.exists(path_2024):
+    raise FileNotFoundError(f"не найден файл: {path_2024}")
+if not os.path.exists(path_2025):
+    raise FileNotFoundError(f"не найден файл: {path_2025}")
+
+# читаем файлы (каждый лист — это центр)
+df_2024_per_city = pd.read_excel(path_2024, sheet_name=None, engine="openpyxl")
+df_2025_per_city = pd.read_excel(path_2025, sheet_name=None, engine="openpyxl")
 
 
+# вспомогательная функция
 def add_center(data, district_name):
     return pd.concat(
         [pd.DataFrame([district_name] * len(data), columns=["center"]), data], axis=1
     )
 
 
-df_combined = add_center(df_2024_per_city["Москва"], "Москва")
-for key in list(df_2024_per_city.keys())[1:]:
-    df_combined = pd.concat(
-        [df_combined, add_center(df_2024_per_city[key], key)], ignore_index=True
-    )
+# формируем 2024
+_2024_parts = []
+for key in df_2024_per_city.keys():
+    _2024_parts.append(add_center(df_2024_per_city[key], key))
+df_combined = pd.concat(_2024_parts, ignore_index=True)
 df_2024 = df_combined.copy()
 
-df_2025 = pd.DataFrame()
+# формируем 2025 и добавляем к общему
+_2025_parts = []
 for key in df_2025_per_city.keys():
-    df_2025 = pd.concat(
-        [df_2025, add_center(df_2025_per_city[key], key)], ignore_index=True
-    )
-    df_combined = pd.concat(
-        [df_combined, add_center(df_2025_per_city[key], key)], ignore_index=True
-    )
+    _2025_parts.append(add_center(df_2025_per_city[key], key))
+df_2025 = pd.concat(_2025_parts, ignore_index=True)
+df_combined = pd.concat([df_combined, df_2025], ignore_index=True)
 
-# id полета
-df_combined["flight_id"] = df_combined["SHR"].str.extract(r"SID/(\d+)")
-# тип БПЛА
-df_combined["uav_type"] = df_combined["SHR"].str.extract(r"TYP/([^\s)]+)")
-# координаты взлета
-df_combined["dep_coord"] = df_combined["SHR"].str.extract(r"DEP/([0-9]+[NS][0-9]+[EW])")
-# координаты посадки
-df_combined["dest_coord"] = df_combined["SHR"].str.extract(
-    r"DEST/([0-9]+[NS][0-9]+[EW])"
-)
-# плановая дата полета, формат - YYMMDD
-df_combined["dof"] = df_combined["SHR"].str.extract(r"DOF/(\d{6})")
-
-# плановое время полета по записям за 2024 (запись вида ARR - откуда и во сколько,куда и во сколько) формат - HHMM
-times = df_combined["ARR"].str.extract(
+# заранее компилируем регулярки
+_re_sid = re.compile(r"SID/(\d+)")
+_re_typ = re.compile(r"TYP/([^\s)]+)")
+_re_dep = re.compile(r"DEP/([0-9]+[NS][0-9]+[EW])")
+_re_dest = re.compile(r"DEST/([0-9]+[NS][0-9]+[EW])")
+_re_dof = re.compile(r"DOF/(\d{6})")
+_re_arr = re.compile(
     r"ARR-[A-Z0-9]+-[A-Z0-9]{4}(?P<dep_hhmm>\d{4})-[A-Z0-9]{4}(?P<arr_hhmm>\d{4})"
 )
-df_combined["dep_time_plan"] = times["dep_hhmm"]
-df_combined["arr_time_plan"] = times["arr_hhmm"]
+_re_atd = re.compile(r"ATD (\d{4})")
+_re_ata = re.compile(r"ATA (\d{4})")
+_re_add = re.compile(r"ADD (\d{6})")
+_re_ada = re.compile(r"ADA (\d{6})")
+_re_adarrz = re.compile(r"ADARRZ ([0-9]+[NS][0-9]+[EW])")
 
-# по записям на 2025 - фактические даты и времени (поиск по DEP/ARR)
+# id полета
+df_combined["flight_id"] = df_combined["SHR"].astype(str).str.extract(_re_sid)
+# тип бпла
+df_combined["uav_type"] = df_combined["SHR"].astype(str).str.extract(_re_typ)
+# координаты взлета
+df_combined["dep_coord"] = df_combined["SHR"].astype(str).str.extract(_re_dep)
+# координаты посадки
+df_combined["dest_coord"] = df_combined["SHR"].astype(str).str.extract(_re_dest)
+# плановая дата полета, формат - yymmdd
+df_combined["dof"] = df_combined["SHR"].astype(str).str.extract(_re_dof)
+
+# плановые времена по шаблону из arr для 2024
+times = df_combined["ARR"].astype(str).str.extract(_re_arr)
+df_combined["dep_time_plan"] = times.get("dep_hhmm")
+df_combined["arr_time_plan"] = times.get("arr_hhmm")
+
+# фактические даты/времена по 2025
 df_combined["dep_time_actual"] = None
 df_combined["arr_time_actual"] = None
 df_combined["dep_date_actual"] = None
 df_combined["arr_date_actual"] = None
-atd_series = df_2025["DEP"].astype(str).str.extract(r"ATD (\d{4})")[0]
-ata_series = df_2025["ARR"].astype(str).str.extract(r"ATA (\d{4})")[0]
-add_series = df_2025["DEP"].astype(str).str.extract(r"ADD (\d{6})")[0]
-ada_series = df_2025["ARR"].astype(str).str.extract(r"ADA (\d{6})")[0]
 
-# в случае отсутсвия ADD (фактическая дата вылета) записываем плановую дату (DOF)
-# запись фактич даты и времени в датафрейм
+atd_series = (
+    df_2025.get("DEP", pd.Series(dtype=object)).astype(str).str.extract(_re_atd)[0]
+)
+ata_series = (
+    df_2025.get("ARR", pd.Series(dtype=object)).astype(str).str.extract(_re_ata)[0]
+)
+add_series = (
+    df_2025.get("DEP", pd.Series(dtype=object)).astype(str).str.extract(_re_add)[0]
+)
+ada_series = (
+    df_2025.get("ARR", pd.Series(dtype=object)).astype(str).str.extract(_re_ada)[0]
+)
+
+# записываем факты в общую таблицу (счёт в df_combined начинается после блока 2024)
 offset_2025 = len(df_2024)
 for idx in range(len(df_2025)):
     combined_idx = offset_2025 + idx
-    dep_time = atd_series.iloc[idx]
-    arr_time = ata_series.iloc[idx]
-    dep_date = add_series.iloc[idx]
-    arr_date = ada_series.iloc[idx]
+    dep_time = atd_series.iloc[idx] if idx < len(atd_series) else None
+    arr_time = ata_series.iloc[idx] if idx < len(ata_series) else None
+    dep_date = add_series.iloc[idx] if idx < len(add_series) else None
+    arr_date = ada_series.iloc[idx] if idx < len(ada_series) else None
     if pd.isna(dep_date):
         dep_date = df_combined.loc[combined_idx, "dof"]
     if pd.notna(dep_date):
@@ -89,53 +111,41 @@ for idx in range(len(df_2025)):
     if pd.notna(arr_time):
         df_combined.at[combined_idx, "arr_time_actual"] = arr_time
 
-
-# склеиваем даты вида YYMMDD и HHMM в pandas.Timestamp
-def combine_date_time(date_str, time_str):
-    if pd.isna(date_str) or pd.isna(time_str):
-        return pd.NaT
-    try:
-        return pd.to_datetime(str(date_str) + str(time_str), format="%y%m%d%H%M")
-    except Exception:
-        return pd.NaT
-
-
-# проходимся по рядам (фактич дата и время или плановые)
-# вылет
-df_combined["dep_datetime"] = df_combined.apply(
-    lambda row: combine_date_time(
-        row["dep_date_actual"] if pd.notna(row["dep_date_actual"]) else row["dof"],
-        (
-            row["dep_time_actual"]
-            if pd.notna(row["dep_time_actual"])
-            else row["dep_time_plan"]
-        ),
-    ),
-    axis=1,
+# склеиваем даты/времена векторно (nat допустим дальше в расчётах)
+dep_date_src = df_combined["dep_date_actual"].where(
+    df_combined["dep_date_actual"].notna(), df_combined["dof"]
 )
-# прилет
-df_combined["arr_datetime"] = df_combined.apply(
-    lambda row: combine_date_time(
-        row["arr_date_actual"] if pd.notna(row["arr_date_actual"]) else row["dof"],
-        (
-            row["arr_time_actual"]
-            if pd.notna(row["arr_time_actual"])
-            else row["arr_time_plan"]
-        ),
-    ),
-    axis=1,
+dep_time_src = df_combined["dep_time_actual"].where(
+    df_combined["dep_time_actual"].notna(), df_combined["dep_time_plan"]
+)
+arr_date_src = df_combined["arr_date_actual"].where(
+    df_combined["arr_date_actual"].notna(), df_combined["dof"]
+)
+arr_time_src = df_combined["arr_time_actual"].where(
+    df_combined["arr_time_actual"].notna(), df_combined["arr_time_plan"]
 )
 
-# обработка случая когда прилет произошел раньше по времени, чем вылет (добавляем сутки к прилету)
-# ситуация разных часовых поясов
-mask = (
+dep_dt_str = dep_date_src.astype(str) + dep_time_src.astype(str)
+arr_dt_str = arr_date_src.astype(str) + arr_time_src.astype(str)
+
+df_combined["dep_datetime"] = pd.to_datetime(
+    dep_dt_str, format="%y%m%d%H%M", errors="coerce"
+)
+df_combined["arr_datetime"] = pd.to_datetime(
+    arr_dt_str, format="%y%m%d%H%M", errors="coerce"
+)
+
+# обработка случая когда прилет раньше вылета (разные чп)
+mask_flip = (
     df_combined["dep_datetime"].notna()
     & df_combined["arr_datetime"].notna()
     & (df_combined["arr_datetime"] < df_combined["dep_datetime"])
 )
-df_combined.loc[mask, "arr_datetime"] += pd.Timedelta(days=1)
+df_combined.loc[mask_flip, "arr_datetime"] = df_combined.loc[
+    mask_flip, "arr_datetime"
+] + pd.Timedelta(days=1)
 
-# работа с длительностью полета
+# длительность полета (в минутах)
 df_combined["duration_min"] = None
 mask_duration = (
     df_combined["dep_datetime"].notna() & df_combined["arr_datetime"].notna()
@@ -155,10 +165,10 @@ def parse_coordinate(coord_str):
         return None, None
     lat_digits, lat_hem, lon_digits, lon_hem = match.groups()
     lat_deg = int(lat_digits[0:2])
-    if len(lat_digits) == 4:  # DDMM
+    if len(lat_digits) == 4:  # ddmm
         lat_min = int(lat_digits[2:4])
         lat_sec = 0
-    elif len(lat_digits) == 6:  # DDMMSS
+    elif len(lat_digits) == 6:  # ddmmss
         lat_min = int(lat_digits[2:4])
         lat_sec = int(lat_digits[4:6])
     else:
@@ -167,11 +177,11 @@ def parse_coordinate(coord_str):
     lat = lat_deg + lat_min / 60 + lat_sec / 3600
     if lat_hem == "S":
         lat = -lat
-    if len(lon_digits) == 5:  # DDDMM
+    if len(lon_digits) == 5:  # dddmm
         lon_deg = int(lon_digits[0:3])
         lon_min = int(lon_digits[3:5])
         lon_sec = 0
-    elif len(lon_digits) == 7:  # DDDMMSS
+    elif len(lon_digits) == 7:  # dddmmss
         lon_deg = int(lon_digits[0:3])
         lon_min = int(lon_digits[3:5])
         lon_sec = int(lon_digits[5:7])
@@ -186,69 +196,66 @@ def parse_coordinate(coord_str):
 
 
 # преобразуем координаты
-# взлет
 df_combined[["takeoff_lat", "takeoff_lon"]] = df_combined["dep_coord"].apply(
     lambda c: pd.Series(parse_coordinate(c))
 )
-# посадка
 df_combined[["landing_lat", "landing_lon"]] = df_combined["dest_coord"].apply(
     lambda c: pd.Series(parse_coordinate(c))
 )
 
-# обаботка координат для таблицы 2025 года (ARR по ключу ADARRZ)
+# обработка координат по ключу adarrz (для части записей 2025)
 missing_dest = df_combined["landing_lat"].isna() & df_combined["ARR"].notna()
 for idx in df_combined[missing_dest].index:
     text = str(df_combined.at[idx, "ARR"])
-    match = re.search(r"ADARRZ ([0-9]+[NS][0-9]+[EW])", text)
-    if match:
-        lat_val, lon_val = parse_coordinate(match.group(1))
+    m = _re_adarrz.search(text)
+    if m:
+        lat_val, lon_val = parse_coordinate(m.group(1))
         df_combined.at[idx, "landing_lat"] = lat_val
         df_combined.at[idx, "landing_lon"] = lon_val
 
+# финальная таблица: выбрасываем служебные поля
+to_drop = [
+    "SHR",
+    "DEP",
+    "ARR",
+    "dof",
+    "dep_coord",
+    "dest_coord",
+    "dep_time_plan",
+    "arr_time_plan",
+    "dep_time_actual",
+    "arr_time_actual",
+    "dep_date_actual",
+    "arr_date_actual",
+]
 df_final = df_combined.drop(
-    columns=[
-        "SHR",
-        "DEP",
-        "ARR",
-        "dof",
-        "dep_coord",
-        "dest_coord",
-        "dep_time_plan",
-        "arr_time_plan",
-        "dep_time_actual",
-        "arr_time_actual",
-        "dep_date_actual",
-        "arr_date_actual",
-    ]
-)
-df_final.reset_index(drop=True, inplace=True)
+    columns=[c for c in to_drop if c in df_combined.columns]
+).reset_index(drop=True)
 
-# удаление записей - дубликатов по ключу dedup_key (уникальному сочетанию)
-# пункт 3.2 ТЗ
+# удаление записей - дубликатов по ключу (п. 3.2 тз)
 df = df_final.copy()
 mask_no_id = df["flight_id"].isna() | (df["flight_id"].astype(str).str.strip() == "")
 df_with_id = df[~mask_no_id].copy()
 df_no_id = df[mask_no_id].copy()
-# удаление дублей с ключом flight_id + dep_date (записи с flight_id)
+
+# записи с flight_id: считаем уникальным (flight_id, dep_datetime)
 key_with_id = ["flight_id", "dep_datetime"]
 df_with_id = df_with_id.sort_values(["flight_id", "dep_datetime"], kind="stable")
 df_with_id = df_with_id.drop_duplicates(subset=key_with_id, keep="first")
 
-# записи без flight_id
-key_no_id = [
-    "dep_datetime",
-    "takeoff_lat",
-    "takeoff_lon",
-    "landing_lat",
-    "landing_lon",
-]
+# записи без flight_id: считаем уникальным (dep_datetime + координаты)
+key_no_id = ["dep_datetime", "takeoff_lat", "takeoff_lon", "landing_lat", "landing_lon"]
 df_no_id = df_no_id.sort_values(["dep_datetime"], kind="stable")
 df_no_id = df_no_id.drop_duplicates(subset=key_no_id, keep="first")
+
 df_final = pd.concat([df_with_id, df_no_id], ignore_index=True)
 
-
-df_final["year_month"] = df_final["dep_datetime"].dt.to_period("M").astype(str)
-df_final["weekday"] = df_final["dep_datetime"].dt.dayofweek  # 0 - Monday
+# производные временные поля
+df_final["year_month"] = df_final["dep_datetime"].dt.to_period("M")
+df_final["year_month"] = (
+    df_final["year_month"].astype(str).where(df_final["dep_datetime"].notna(), None)
+)
+df_final["weekday"] = df_final["dep_datetime"].dt.dayofweek  # 0 - monday
 df_final["date"] = df_final["dep_datetime"].dt.date
 df_final["hour"] = df_final["dep_datetime"].dt.hour
 
@@ -269,7 +276,15 @@ def daypart(h):
 
 df_final["daypart"] = df_final["hour"].apply(daypart)
 
-df_final.to_excel(
-    os.path.join(os.path.join(BASE_DIR, "data"), "data.xlsx"), index=False
-)
-# df_final.to_csv(os.path.join(BASE_DIR, "data", "data.csv"), index=False)
+# nat -> None
+# for col in ["dep_datetime", "arr_datetime"]:
+#     # формат строки можно поменять при желании (например, "%Y-%m-%d %H:%M:%S")
+#     df_final[col] = df_final[col].dt.strftime("%Y-%m-%d %H:%M:%S").where(
+#         df_final[col].notna(), None
+#     )
+
+# сохраняем в csv
+out_dir = os.path.join(BASE_DIR, "data")
+os.makedirs(out_dir, exist_ok=True)
+out = os.path.join(out_dir, "data.xlsx")
+df_final.to_excel(out, index=False)
