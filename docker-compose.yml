@@ -1,0 +1,28 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      # подставь свои значения по необходимости
+      DATABASE_URL: sqlite:////data/app.db
+      JWT_SECRET: change-me
+      ACCESS_TOKEN_EXPIRES_MIN: "60"
+    volumes:
+      - backend_data:/data
+    expose:
+      - "8000"   # внутри сети compose
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    depends_on:
+      - backend
+    ports:
+      - "8087:8080"  # ← один внешний порт
+    restart: unless-stopped
+
+volumes:
+  backend_data:
