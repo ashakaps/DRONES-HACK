@@ -1,1 +1,12 @@
 venv/
+# Python cache
+__pycache__/
+*.pyc
+
+# Генерируемые графики
+app/static/data/png/
+
+# IDE и ОС
+.vscode/
+.idea/
+.DS_Store

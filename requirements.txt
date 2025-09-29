@@ -4,5 +4,9 @@ pydantic
 asyncpg
 python-dotenv
 
+pandas
+matplotlib
+seaborn
+openpyxl
 
 

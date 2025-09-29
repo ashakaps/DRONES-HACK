@@ -4,6 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from app.routes import charts   # 👈 добавь эту строку
+
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("app")
 
@@ -33,4 +35,5 @@ async def serve_frontend():
 async def health():
     return {"status": "ok"}
 
-# ui и ws пока не подключаем, если нужны — добавим отдельно
+# подключаем роутер для графиков
+app.include_router(charts.router)   # 👈 и эту строку
