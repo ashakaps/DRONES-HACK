@@ -9,4 +9,6 @@ matplotlib
 seaborn
 openpyxl
 
+sqlalchemy
+psycopg[binary]
 

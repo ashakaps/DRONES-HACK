@@ -41,35 +41,22 @@ async function loadChart(containerId, chartName, city = null) {
 }
 
 // открыть панели и заголовок
-function openPanelsForCity(cityName) {
-  const title = document.getElementById("sidebar-title");
-  if (title) title.innerText = cityName;
-
-  ["sidebar", "sidebar-left-top", "sidebar-left-bottom"].forEach((id) => {
-    const el = document.getElementById(id);
-    if (el) el.classList.add("visible");
-  });
-}
-
-// загрузить все графики для выбранного города
 function loadChartsForCity(cityName) {
   openPanelsForCity(cityName);
 
-  // маленькие левые
-  loadChart("chart-weekly_by_city", "weekly_by_city", cityName);
-  loadChart("chart-hourly_dayparts", "hourly_dayparts");
-
-
-  // правый сайдбар
-  loadChart("chart-weekly_by_city", "weekly_by_city", cityName);
+  // Пока грузим только один график (правый сайдбар)
   loadChart("chart-right-1", "monthly_total");
-  loadChart("chart-right-3", "city_monthly_trend", cityName);
 
+  // Остальные добавим позже
+  // loadChart("chart-left-top", "weekly_by_city", cityName);
+  // loadChart("chart-left-bottom", "hourly_dayparts");
+  // loadChart("chart-right-3", "city_monthly_trend", cityName);
 }
+
 
 // === ГОРОДА ===
 const citySelect = document.getElementById("city-select");
-fetch("/static/data/cities.geojson")
+fetch("/geo/cities")
   .then((r) => {
     if (!r.ok) throw new Error("cities.geojson not found");
     return r.json();
@@ -86,6 +73,7 @@ fetch("/static/data/cities.geojson")
         f.properties?.name ||
         f.properties?.NAME ||
         f.properties?.center ||
+        f.properties?.name ||
         `Город ${idx}`;
 
       // добавим в селект
@@ -149,7 +137,7 @@ function onEachFeature(feature, layer) {
   featuresMap[regionName] = layer;
 }
 
-fetch("/static/data/russia.geojson")
+fetch("/geo/regions")
   .then((resp) => resp.json())
   .then((geojson) => {
     console.log("[DroneRadar] features:", geojson.features.length);
@@ -188,3 +176,4 @@ fetch("/static/data/russia.geojson")
     });
   })
   .catch((err) => console.error("Ошибка загрузки GeoJSON:", err));
+console.log(geojson.features[0].properties);

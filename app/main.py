@@ -3,8 +3,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-
+from app.routes import db as db_routes
 from app.routes import charts   # 👈 добавь эту строку
+from app.routes import geo
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("app")
@@ -37,3 +38,5 @@ async def health():
 
 # подключаем роутер для графиков
 app.include_router(charts.router)   # 👈 и эту строку
+app.include_router(db_routes.router)
+app.include_router(geo.router)

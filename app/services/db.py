@@ -1,25 +1,16 @@
-import os, asyncio, logging
+import os
+import asyncio
+import logging
 from typing import Optional, Tuple, Dict, Any
 import asyncpg
 
 log = logging.getLogger("db")
 
 _pool: Optional[asyncpg.Pool] = None
-_dsn = os.getenv("DB_DSN", "postgresql://postgres:postgres@db:5432/droneradar")
-
-CREATE_SQL = '''
-CREATE TABLE IF NOT EXISTS drone_points(
-  drone_id TEXT,
-  ts TIMESTAMPTZ NOT NULL,
-  lat DOUBLE PRECISION NOT NULL,
-  lon DOUBLE PRECISION NOT NULL,
-  alt DOUBLE PRECISION,
-  speed DOUBLE PRECISION
-);
-'''
+_dsn = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@skeleton_restore-db-1:5432/droneradar")
 
 async def ensure_pool(retries: int = 20, delay: float = 1.0) -> Optional[asyncpg.Pool]:
-    """Создаёт пул соединений с ретраями. Не падает, если DB_STRICT=0."""
+    """Создаёт пул соединений с ретраями."""
     global _pool
     if _pool:
         return _pool
@@ -35,15 +26,6 @@ async def ensure_pool(retries: int = 20, delay: float = 1.0) -> Optional[asyncpg
             await asyncio.sleep(delay)
     log.error("DB connection failed after retries: %s", last_exc)
     return None
-
-async def init_db() -> None:
-    pool = await ensure_pool()
-    if not pool:
-        log.warning("init_db skipped (no pool)")
-        return
-    async with pool.acquire() as conn:
-        await conn.execute(CREATE_SQL)
-    log.info("DB schema ensured")
 
 async def ping() -> Tuple[bool, Dict[str, Any]]:
     pool = await ensure_pool()
