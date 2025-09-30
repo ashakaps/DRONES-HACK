@@ -24,8 +24,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# статика
-app.mount("/", StaticFiles(directory="app/frontend/dist", html=True), name="frontend")
+
 
 
 
@@ -77,3 +76,6 @@ def get_routes():
             "methods": getattr(route, "methods", None)
         })
     return routes
+
+# статика
+app.mount("/", StaticFiles(directory="app/frontend/dist", html=True), name="frontend")

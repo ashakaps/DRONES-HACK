@@ -10,7 +10,7 @@ import './App.css';
 
 const ProtectedRoute = ({ children, requiredRole }) => {
   const { user, loading } = useAuth();
-
+console.log("user:", user);
   if (loading) {
     return <div>Загрузка...</div>;
   }
