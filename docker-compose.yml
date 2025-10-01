@@ -1,0 +1,44 @@
+services:
+  api:
+    build: .
+    ports:
+      - "${API_PORT:-8080}:8080"
+    environment:
+      CORS_ORIGINS: "${CORS_ORIGINS:-http://localhost:3000,http://localhost:5173}"
+      UI_BROADCAST_BACKEND: "${UI_BROADCAST_BACKEND:-memory}"
+      DB_DSN: "${DB_DSN:-postgresql://postgres:postgres@db:5432/droneradar}"
+      DB_INIT: "${DB_INIT:-1}"
+      DB_STRICT: "${DB_STRICT:-0}"
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+      - ml
+
+  ml:
+    build: ./ml
+    ports:
+      - "8001:8001"
+    environment:
+      API_URL: "http://api:8000"
+
+  db:
+    image: postgis/postgis:17-3.4
+    container_name: skeleton_restore-db-1
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-droneradar}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-droneradar}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    ports:
+      - "${DB_PORT_EXTERNAL:-5432}:5432"
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+
+
+volumes:
+  dbdata:

@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+pydantic
+asyncpg
+python-dotenv
+
+pandas
+matplotlib
+seaborn
+openpyxl
+
+sqlalchemy
+psycopg[binary]
+
