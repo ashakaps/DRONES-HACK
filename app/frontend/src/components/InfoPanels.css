@@ -1,0 +1,33 @@
+/* InfoPanels.css */
+.info-panel {
+  position: absolute;
+  width: 250px;
+  background: white;
+  border-radius: 5px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  z-index: 998;
+}
+
+.info-panel-left-top {
+  top: 60px;
+  left: 10px;
+}
+
+.info-panel-left-bottom {
+  bottom: 10px;
+  left: 10px;
+}
+
+.panel-header {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.panel-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
