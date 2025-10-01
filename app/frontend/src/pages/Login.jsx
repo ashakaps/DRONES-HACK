@@ -1,6 +1,7 @@
 // src/pages/Login.jsx
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext.jsx';
+import { useLocation, useNavigate } from "react-router-dom";
 import './Login.css';
 
 const Login = () => {
@@ -11,17 +12,24 @@ const Login = () => {
   
   const { login } = useAuth();
 
+  const nav = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || "/";
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     const result = await login(email, password);
-    
-    if (!result.success) {
+  
+    if (result.success) {
+        nav(from, {replace: true});
+    } else {
       setError(result.error);
     }
     
+
     setLoading(false);
   };
 

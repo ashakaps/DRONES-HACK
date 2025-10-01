@@ -1,7 +1,8 @@
 import os, logging
+from pathlib import Path
 from app.routes import auth
 from app.services.db import init_db, engine
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -11,6 +12,9 @@ from app.routes import geo
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("app")
+
+FRONTEND_DIST = Path(__file__).resolve().parent / "frontend" / "dist"
+INDEX_HTML = FRONTEND_DIST / "index.html"
 
 app = FastAPI(title="DroneRadar API", version="0.2.0")
 
@@ -23,16 +27,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-
-
-
-# index.html
-# @app.get("/")
-# async def serve_frontend():
-#     index_path = os.path.join("app", "frontend","dist", "index.html")
-#     return FileResponse(index_path)
 
 # health
 @app.get("/health")
@@ -77,5 +71,24 @@ def get_routes():
         })
     return routes
 
+
 # статика
-app.mount("/", StaticFiles(directory="app/frontend/dist", html=True), name="frontend")
+app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True), name="frontend")
+
+
+@app.middleware("http")
+async def spa_fallback(request: Request, call_next):
+    resp = await call_next(request)
+    p = request.url.path
+    # Fallback только для GET HTML и не-API путей
+    if (
+        resp.status_code == 404
+        and request.method == "GET"
+        and not p.startswith("/api")
+        and p not in ("/openapi.json", "/docs", "/redoc")
+        and "text/html" in request.headers.get("accept", "")
+        and INDEX_HTML.is_file()
+    ):
+        return FileResponse(INDEX_HTML)
+    return resp
+

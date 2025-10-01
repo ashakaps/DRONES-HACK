@@ -1,6 +1,3 @@
-// src/pages/Profile.js
-import React from 'react';
-import { useAuth } from '../context/AuthContext';
 
 const Profile = () => {
   const { user } = useAuth();
@@ -16,6 +13,6 @@ const Profile = () => {
       </div>
     </div>
   );
-};
+}
 
 export default Profile;

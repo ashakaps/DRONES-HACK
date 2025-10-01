@@ -2,6 +2,7 @@
 from datetime import datetime
 from typing import List
 from fastapi import APIRouter, FastAPI, Depends, HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
 import app
 from app.models import User
 from app.routes.auth_funcs import create_access_token, get_current_user, hash_password, require_admin, verify_password
@@ -12,9 +13,24 @@ from sqlmodel import Session, select
 
 router = APIRouter()
 
-@router.get("")
-async def health():
-    return {"status": "ok"}
+# Поддержка входа через кнопку "Authenticate" в Swagger (/docs)
+@router.post("/auth/token", response_model=TokenResponse)
+def issue_token(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    session: Session = Depends(get_session),
+):
+    # Swagger шлёт form: username=<email>&password=<pwd>
+    user = session.exec(select(User).where(User.email == form_data.username)).first()
+    if not user or not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+
+    user.last_login_at = datetime.utcnow()
+    session.add(user)
+    session.commit()
+
+    token = create_access_token(user.id, user.role)
+    return TokenResponse(access_token=token)
+
 
 @router.post("/auth/login", response_model=TokenResponse)
 def login(req: LoginRequest, session: Session = Depends(get_session)):
@@ -70,13 +86,3 @@ def delete_user(user_id: int, _: User = Depends(require_admin), session: Session
         raise HTTPException(status_code=404, detail="Not found")
     session.delete(u)
     session.commit()
-
-@router.get("/routes")
-def get_routes():
-    routes = []
-    for route in app.routes:
-        routes.append({
-            "path": route.path,
-            "methods": getattr(route, "methods", None)
-        })
-    return routes

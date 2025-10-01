@@ -23,7 +23,7 @@ const AdminDashboard = () => {
   const loadUsers = async () => {
     try {
       const response = await authService.getUsers();
-      setUsers(response.data);
+      setUsers(response);
     } catch (error) {
       console.error('Error loading users:', error);
     }
@@ -119,6 +119,7 @@ const AdminDashboard = () => {
                 <th>Email</th>
                 <th>Роль</th>
                 <th>Последний вход</th>
+                <th>Создан</th>
                 <th>Действия</th>
               </tr>
             </thead>
@@ -127,7 +128,8 @@ const AdminDashboard = () => {
                 <tr key={user.id}>
                   <td>{user.email}</td>
                   <td>{user.role}</td>
-                  <td>{user.last_login ? new Date(user.last_login).toLocaleString() : 'Никогда'}</td>
+                  <td>{user.last_login_at ? new Date(user.last_login_at).toLocaleString() : 'Никогда'}</td>
+                  <td>{user.created_at ? new Date(user.created_at).toLocaleString() : 'Никогда'}</td>
                   <td>
                     <button 
                       onClick={() => handleDeleteUser(user.id)}
