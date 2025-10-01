@@ -13,7 +13,7 @@ from app.routes import geo
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("app")
 
-FRONTEND_DIST = Path(__file__).resolve().parent / "frontend" / "dist"
+FRONTEND_DIST = Path(__file__).resolve().parent / "static"
 INDEX_HTML = FRONTEND_DIST / "index.html"
 
 app = FastAPI(title="DroneRadar API", version="0.2.0")
@@ -27,6 +27,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # health
 @app.get("/health")
@@ -43,15 +44,13 @@ app.include_router(geo.router)
 # подключаем роутера для авторизации
 app.include_router(auth.router, prefix="/api")
 
+
 @app.on_event("startup")
 def on_start():
     init_db()
     from sqlmodel import Session, select
     from app.models import User, RoleEnum
     from app.routes.auth_funcs import hash_password
-
-
-    admin_email = "admin@example.com"
 
     # seed admin if missing
     with Session(engine) as s:
@@ -60,6 +59,7 @@ def on_start():
         if not exists:
             s.add(User(email=admin_email, role=RoleEnum.admin, hashed_password=hash_password("admin123")))
             s.commit()
+
 
 @app.get("/routes")
 def get_routes():

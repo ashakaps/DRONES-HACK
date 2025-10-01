@@ -9,8 +9,6 @@ services:
       DB_DSN: "${DB_DSN:-postgresql://postgres:postgres@db:5432/droneradar}"
       DB_INIT: "${DB_INIT:-1}"
       DB_STRICT: "${DB_STRICT:-0}"
-    volumes:
-      - .:/app
     depends_on:
       - db
       - ml
