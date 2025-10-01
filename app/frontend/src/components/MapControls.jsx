@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import './MapControls.css';
 
 const MapControls = ({
-  cities = [],
+  cities = null,
   regions = [],
   onCityChange,
   onRegionChange,
@@ -14,6 +14,17 @@ const MapControls = ({
   const [selectedCity, setSelectedCity] = useState('');
   const [selectedRegion, setSelectedRegion] = useState('');
 
+    console.log("Cities in mapControls: ", cities);
+
+    const cityNames1 = [];
+    if (cities) {
+        cities.features.forEach(feature => {
+            if (feature.properties && feature.properties.name) {
+                cityNames1.push(feature.properties.name);
+            }
+        });
+        console.log(cityNames1);
+    }
   useEffect(() => {
     // Динамически загружаем Choices.js
     loadChoices();
@@ -54,7 +65,7 @@ const MapControls = ({
           className="control-select"
         >
           <option value="">Выберите город...</option>
-          {cities.map(city => (
+          {cityNames1.map(city => (
             <option key={city.id} value={city.id}>
               {city.name}
             </option>

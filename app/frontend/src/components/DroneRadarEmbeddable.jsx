@@ -9,7 +9,7 @@ import './DroneRadarEmbeddable.css';
 const DroneRadarEmbeddable = ({
   containerId = "drone-radar-embedded",
   className = "",
-  initialCities = [],
+  initialCities = null,
   initialRegions = [],
   onMapReady,
   onCitySelect,
