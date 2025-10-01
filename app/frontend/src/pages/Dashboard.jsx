@@ -7,10 +7,10 @@ import Profile from "./Profile.jsx";
 import { authService } from '../services/authService.js';
 
 import "./Dashboard.css";
+import DroneRadarEmbeddable from '../components/DroneRadarEmbeddable.jsx';
 
 // заглушки вкладок — подмени своими компонентами
 function ImportData() { return <div>Загрузка данных</div>; }
-function MapView()    { return <div>Карта</div>; }
 
 function Logout() {
   localStorage.removeItem("token");
@@ -25,6 +25,9 @@ export default function Dashboard() {
   const [uLoading, setULoading] = useState(false);
   const [uError, setUError] = useState(null);
   const { pathname } = useLocation();
+  const [cities, setCities] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
 
   const loadUsers = useCallback(async () => {
@@ -39,9 +42,23 @@ export default function Dashboard() {
     }
   }, []);
 
+  const loadCities = useCallback(async () => {
+    try {
+      setLoading(true); setError(null);
+      const data = await mapService.cities(); // должен возвращать .data
+      console.log(data);
+      setCities(data);
+    } catch (e) {
+      setError(e?.response?.data?.detail || "Не удалось загрузить список городов");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (isAdmin && pathname === "/users") loadUsers();
-  }, [isAdmin, pathname, loadUsers]);
+    if (pathname === "/map") loadCities();
+  }, [isAdmin, pathname, loadUsers, loadCities]);
 
   const handleDeleteUser = async (id) => {
     if (!confirm("Удалить пользователя?")) return;
@@ -86,7 +103,7 @@ const handleCreateUser = async (payload) => {
         <Routes>
           {isAdmin && <Route path="/users" element={<UsersAdmin users={users} loading={uLoading} error={uError} onRefresh={loadUsers} onDelete={handleDeleteUser} onCreate={handleCreateUser}/>} />}
           {isAdmin && <Route path="/import" element={<ImportData />} />}
-          <Route path="/map" element={<MapView />} />
+          <Route path="/map" element={<DroneRadarEmbeddable initialCities={cities}/>} />
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<Navigate to={defaultRoute} replace />} />
         </Routes>

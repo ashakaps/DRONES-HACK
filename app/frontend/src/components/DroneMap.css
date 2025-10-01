@@ -1,0 +1,24 @@
+/* src/components/DroneMap.css */
+.drone-map-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: #f8f9fa;
+}
+
+/* Leaflet container styles */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  background: #f8f9fa;
+  font-family: inherit;
+}
+
+.leaflet-popup-content {
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.leaflet-control-zoom a {
+  font-family: inherit;
+}

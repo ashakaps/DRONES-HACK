@@ -1,14 +1,16 @@
-// src/pages/AdminDashboard.js
+// src/pages/AdminDashboard.jsx  ← исправил расширение
 import React, { useState, useEffect } from 'react';
 import { authService } from '../services/authService';
 import { useAuth } from '../context/AuthContext';
+import DroneRadarEmbeddable from '../components/DroneRadarEmbeddable';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { logout } = useAuth();
+  const [activeTab, setActiveTab] = useState('map'); // 'map' или 'users'
+  const { logout, user } = useAuth();
 
   const [newUser, setNewUser] = useState({
     email: '',
@@ -16,14 +18,34 @@ const AdminDashboard = () => {
     role: 'operator'
   });
 
+  // Данные для карты
+  const cities = [
+    { id: 'moscow', name: 'Москва' },
+    { id: 'spb', name: 'Санкт-Петербург' },
+    { id: 'kazan', name: 'Казань' },
+    { id: 'novosibirsk', name: 'Новосибирск' }
+  ];
+
+  const regions = [
+    { id: 'central', name: 'Центральный ФО' },
+    { id: 'northwest', name: 'Северо-Западный ФО' },
+    { id: 'south', name: 'Южный ФО' },
+    { id: 'volga', name: 'Приволжский ФО' },
+    { id: 'ural', name: 'Уральский ФО' },
+    { id: 'siberian', name: 'Сибирский ФО' },
+    { id: 'far_east', name: 'Дальневосточный ФО' }
+  ];
+
   useEffect(() => {
-    loadUsers();
-  }, []);
+    if (activeTab === 'users') {
+      loadUsers();
+    }
+  }, [activeTab]);
 
   const loadUsers = async () => {
     try {
       const response = await authService.getUsers();
-      setUsers(response);
+      setUsers(response.data);
     } catch (error) {
       console.error('Error loading users:', error);
     }
@@ -56,93 +78,156 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleMapReady = (map) => {
+    console.log('Карта готова для администратора:', map);
+  };
+
+  const handleCitySelect = (cityId) => {
+    console.log('Админ выбрал город:', cityId);
+  };
+
+  const handleRegionSelect = (regionId) => {
+    console.log('Админ выбрал регион:', regionId);
+  };
+
   return (
     <div className="admin-dashboard">
       <header className="dashboard-header">
         <h1>Панель администратора</h1>
-        <button onClick={logout} className="logout-btn">Выйти</button>
+        <div className="user-info">
+          <span>{user?.email}</span>
+          <button onClick={logout} className="logout-btn">Выйти</button>
+        </div>
       </header>
 
       <div className="dashboard-content">
-        <div className="actions-panel">
+        {/* Панель вкладок */}
+        <div className="tabs-panel">
           <button 
-            onClick={() => setShowCreateForm(!showCreateForm)}
-            className="btn-primary"
+            className={`tab-btn ${activeTab === 'map' ? 'active' : ''}`}
+            onClick={() => setActiveTab('map')}
           >
-            Создать пользователя
+            Просмотр карты
           </button>
-          <button className="btn-secondary">Загрузить данные</button>
-          <button className="btn-secondary">Просмотр карты</button>
-          <button className="btn-secondary">Мой профиль</button>
+          <button 
+            className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`}
+            onClick={() => setActiveTab('users')}
+          >
+            Управление пользователями
+          </button>
+          <button className="tab-btn" onClick={() => console.log('Загрузка данных')}>
+            Загрузить данные
+          </button>
+          <button className="tab-btn" onClick={() => window.location.href = '/profile'}>
+            Мой профиль
+          </button>
         </div>
 
-        {showCreateForm && (
-          <div className="create-user-form">
-            <h3>Создать нового пользователя</h3>
-            <form onSubmit={handleCreateUser}>
-              <input
-                type="email"
-                placeholder="Email"
-                value={newUser.email}
-                onChange={(e) => setNewUser({...newUser, email: e.target.value})}
-                required
-              />
-              <input
-                type="password"
-                placeholder="Пароль"
-                value={newUser.password}
-                onChange={(e) => setNewUser({...newUser, password: e.target.value})}
-                required
-              />
-              <select
-                value={newUser.role}
-                onChange={(e) => setNewUser({...newUser, role: e.target.value})}
-              >
-                <option value="operator">Оператор</option>
-                <option value="admin">Администратор</option>
-              </select>
-              <button type="submit" disabled={loading}>
-                {loading ? 'Создание...' : 'Создать'}
-              </button>
-              <button type="button" onClick={() => setShowCreateForm(false)}>
-                Отмена
-              </button>
-            </form>
+        {/* Контент вкладок */}
+        {activeTab === 'map' && (
+          <div className="map-container">
+            <DroneRadarEmbeddable
+              containerId="admin-map"
+              className="admin-map"
+              initialCities={cities}
+              initialRegions={regions}
+              onMapReady={handleMapReady}
+              onCitySelect={handleCitySelect}
+              onRegionSelect={handleRegionSelect}
+              onFilter={() => console.log('Фильтр применен')}
+              onModeToggle={() => console.log('Режим переключен')}
+            />
           </div>
         )}
 
-        <div className="users-table">
-          <h3>Пользователи системы</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Email</th>
-                <th>Роль</th>
-                <th>Последний вход</th>
-                <th>Создан</th>
-                <th>Действия</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map(user => (
-                <tr key={user.id}>
-                  <td>{user.email}</td>
-                  <td>{user.role}</td>
-                  <td>{user.last_login_at ? new Date(user.last_login_at).toLocaleString() : 'Никогда'}</td>
-                  <td>{user.created_at ? new Date(user.created_at).toLocaleString() : 'Никогда'}</td>
-                  <td>
-                    <button 
-                      onClick={() => handleDeleteUser(user.id)}
-                      className="btn-danger"
+        {activeTab === 'users' && (
+          <div className="users-panel">
+            <div className="panel-header">
+              <h3>Управление пользователями</h3>
+              <button 
+                onClick={() => setShowCreateForm(!showCreateForm)}
+                className="btn-primary"
+              >
+                {showCreateForm ? 'Отмена' : 'Создать пользователя'}
+              </button>
+            </div>
+
+            {showCreateForm && (
+              <div className="create-user-form card">
+                <h4>Создать нового пользователя</h4>
+                <form onSubmit={handleCreateUser}>
+                  <div className="form-group">
+                    <input
+                      type="email"
+                      placeholder="Email"
+                      value={newUser.email}
+                      onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <input
+                      type="password"
+                      placeholder="Пароль"
+                      value={newUser.password}
+                      onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <select
+                      value={newUser.role}
+                      onChange={(e) => setNewUser({...newUser, role: e.target.value})}
                     >
-                      Удалить
+                      <option value="operator">Оператор</option>
+                      <option value="admin">Администратор</option>
+                    </select>
+                  </div>
+                  <div className="form-actions">
+                    <button type="submit" disabled={loading} className="btn-primary">
+                      {loading ? 'Создание...' : 'Создать'}
                     </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            <div className="users-table card">
+              <h4>Пользователи системы</h4>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Email</th>
+                    <th>Роль</th>
+                    <th>Последний вход</th>
+                    <th>Действия</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map(user => (
+                    <tr key={user.id}>
+                      <td>{user.email}</td>
+                      <td>
+                        <span className={`role-badge role-${user.role}`}>
+                          {user.role}
+                        </span>
+                      </td>
+                      <td>{user.last_login ? new Date(user.last_login).toLocaleString() : 'Никогда'}</td>
+                      <td>
+                        <button 
+                          onClick={() => handleDeleteUser(user.id)}
+                          className="btn-danger"
+                        >
+                          Удалить
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

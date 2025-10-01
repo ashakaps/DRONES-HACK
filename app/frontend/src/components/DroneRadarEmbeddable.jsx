@@ -7,117 +7,88 @@ import InfoPanels from './InfoPanels';
 import './DroneRadarEmbeddable.css';
 
 const DroneRadarEmbeddable = ({
-  // Пропсы для контейнера
   containerId = "drone-radar-embedded",
   className = "",
-  
-  // Пропсы для данных
   initialCities = [],
   initialRegions = [],
-  
-  // Колбэки
   onMapReady,
   onCitySelect,
   onRegionSelect,
   onFilter,
-  onModeToggle,
-  
-  // Состояние UI
-  initialSidebarOpen = false,
-  initialPanels = []
+  onModeToggle
 }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(initialSidebarOpen);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarContent, setSidebarContent] = useState("");
   const [sidebarTitle, setSidebarTitle] = useState("Регион");
-  const [panels, setPanels] = useState(initialPanels);
-  const [mapInstance, setMapInstance] = useState(null);
 
   const handleMapReady = (map) => {
-    setMapInstance(map);
+    console.log('DroneRadarEmbeddable - Map ready');
     if (onMapReady) onMapReady(map);
     
-    // Здесь можно добавить маркеры, слои и т.д.
-    setupMapFeatures(map);
-  };
-
-  const setupMapFeatures = (map) => {
-    // Пример: добавляем обработчик клика по карте
+    // Настройка обработчиков карты
     map.on('click', (e) => {
       setSidebarTitle("Выбранная точка");
-      setSidebarContent(`Координаты: ${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`);
+      setSidebarContent(`
+        <h4>Координаты:</h4>
+        <p>Широта: ${e.latlng.lat.toFixed(6)}</p>
+        <p>Долгота: ${e.latlng.lng.toFixed(6)}</p>
+      `);
       setSidebarOpen(true);
     });
   };
 
   const handleRegionSelect = (regionId) => {
+    console.log('DroneRadarEmbeddable - Region selected:', regionId);
     if (onRegionSelect) onRegionSelect(regionId);
-    // Обновляем сайдбар при выборе региона
+    
     if (regionId) {
-      setSidebarTitle("Информация о регионе");
-      setSidebarContent(`Загружаем данные для региона ${regionId}...`);
+      const region = initialRegions.find(r => r.id === regionId);
+      setSidebarTitle(region ? region.name : "Информация о регионе");
+      setSidebarContent(`
+        <h4>Данные региона:</h4>
+        <p>Загружаем статистику для региона ${regionId}...</p>
+        <ul>
+          <li>Количество дронов: 15</li>
+          <li>Активных миссий: 3</li>
+          <li>Покрытие территории: 75%</li>
+        </ul>
+      `);
       setSidebarOpen(true);
     }
   };
 
-  const handlePanelClose = (panelId) => {
-    setPanels(panels.map(panel => 
-      panel.id === panelId ? { ...panel, isOpen: false } : panel
-    ));
+  const handleCitySelect = (cityId) => {
+    console.log('DroneRadarEmbeddable - City selected:', cityId);
+    if (onCitySelect) onCitySelect(cityId);
   };
-
-  const defaultPanels = [
-    {
-      id: 'chart-1',
-      title: 'Диаграмма 1',
-      content: 'Здесь будет график или таблица',
-      position: 'left-top',
-      isOpen: true
-    },
-    {
-      id: 'chart-2', 
-      title: 'Диаграмма 2',
-      content: 'Здесь будет гистограмма или текст',
-      position: 'left-bottom',
-      isOpen: true
-    }
-  ];
 
   return (
     <div id={containerId} className={`drone-radar-embedded ${className}`}>
-      {/* Карта */}
       <DroneMap
         containerId={`${containerId}-map`}
         onMapReady={handleMapReady}
-        onRegionSelect={handleRegionSelect}
-        onCitySelect={onCitySelect}
       />
       
-      {/* Элементы управления */}
       <MapControls
         cities={initialCities}
         regions={initialRegions}
-        onCityChange={onCitySelect}
+        onCityChange={handleCitySelect}
         onRegionChange={handleRegionSelect}
         onFilterClick={onFilter}
         onModeToggle={onModeToggle}
         className="embedded-controls"
       />
       
-      {/* Сайдбар */}
       <MapSidebar
         isOpen={sidebarOpen}
         title={sidebarTitle}
         onClose={() => setSidebarOpen(false)}
         position="right"
       >
-        {sidebarContent}
+        <div dangerouslySetInnerHTML={{ __html: sidebarContent }} />
       </MapSidebar>
       
-      {/* Информационные панели */}
-      <InfoPanels
-        panels={panels.length > 0 ? panels : defaultPanels}
-        onPanelClose={handlePanelClose}
-      />
+      <InfoPanels />
     </div>
   );
 };
