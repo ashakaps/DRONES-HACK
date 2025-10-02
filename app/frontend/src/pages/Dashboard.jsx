@@ -6,6 +6,7 @@ import UsersAdmin from "../components/UsersAdmin.jsx";
 import Profile from "../components/Profile.jsx";
 import { authService } from '../services/authService.js';
 import DroneRadar from "../components/DroneRadar.tsx";
+import Upload from "../components/Upload.jsx";
 
 import "./Dashboard.css";
 
@@ -35,6 +36,7 @@ export default function Dashboard() {
   const [uLoading, setULoading] = useState(false);
   const [uError, setUError] = useState(null);
   const { pathname } = useLocation();
+  const [flight_count, setFlightCount] = useState([]);
 
 
   const loadUsers = useCallback(async () => {
@@ -98,7 +100,7 @@ const handleCreateUser = async (payload) => {
       <div style={{ padding: 12 }}>
         <Routes>
           {isAdmin && <Route path="/users" element={<UsersAdmin users={users} loading={uLoading} error={uError} onRefresh={loadUsers} onDelete={handleDeleteUser} onCreate={handleCreateUser}/>} />}
-          {isAdmin && <Route path="/import" element={<ImportData />} />}
+          {isAdmin && <Route path="/import" element={<Upload />} />}
 //          <Route path="/map" element={<DroneRadarStub />} />
           <Route path="/static" element={<MapWithLegacyLink />} />
           <Route path="/profile" element={<Profile />} />
