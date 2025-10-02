@@ -3,7 +3,7 @@ import { Routes, Route, Navigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { TabsBar } from "../components/TabsBar.jsx";
 import UsersAdmin from "../components/UsersAdmin.jsx";
-import Profile from "./Profile.jsx";
+import Profile from "../components/Profile.jsx";
 import { authService } from '../services/authService.js';
 import DroneRadar from "../components/DroneRadar.tsx";
 

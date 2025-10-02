@@ -1,3 +1,4 @@
+import { useAuth } from '../context/AuthContext.jsx';
 
 const Profile = () => {
   const { user } = useAuth();
@@ -13,6 +14,6 @@ const Profile = () => {
       </div>
     </div>
   );
-}
+};
 
 export default Profile;
