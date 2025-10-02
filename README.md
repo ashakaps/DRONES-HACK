@@ -104,6 +104,14 @@
    docker-compose up --build
    ```
 
+  При первом запуске необходимо выполнить инициализацию базы данных. Для этого нужно выполнить 2 команды:
+
+   ```bash
+   docker-compose up --build
+   docker cp db/init/drones_plain.sql skeleton_restore-db-1:/drones_plain.sql
+   docker exec -it skeleton_restore-db-1 psql -U postgres -d droneradar -f /drones_plain.sql
+   ```
+   
    После сборки фронтенда и бэкенда API станет доступно на `http://localhost:8080`.
 
 5. Откройте в браузере `http://localhost:8080`.  Если всё прошло успешно, вы увидите форму авторизации.  В систему уже создан пользователь `admin@example.com` с паролем `admin123`.  После входа откроется панель администратора.  ML‑сервис доступен на порту `8001` (пока реализованы энд‑точки `/ping` и `/predict`).
@@ -222,7 +230,7 @@ curl "http://localhost:8080/charts/report_json?city=Москва"
 - **ashakaps** — Data Scientist, отвечала предобработку и анализ данных (`preprocessing.py`) в команде с **l00fi**, а также за разработку базы данных, её наполение и оформление документации.
 - **l00fi** - Data Scientist, отвечал за очистку данных, парсинг погодных условий (`preproc.py`, `weather_parser.py`) и визуализацию данных в команде с **angelinanana**.
 - **angelinanana**
-- **petushokok**
+- **petushokok** - авторизация; загрузка данных; frontend в паре с **zoot1c**.
 - **zoott1c**
 
 Проект разрабатывается в рамках хакатона ЛЦТ и открыт для дальнейшего улучшения.
