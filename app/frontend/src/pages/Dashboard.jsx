@@ -16,7 +16,7 @@ function DroneRadarStub() { return <div>Будет карта. потом.</div>
 function MapWithLegacyLink() {
   return (
     <>
-        <Link to="/static/" reloadDocument>Димина карта</Link>
+        <Link to="/static/" reloadDocument>Переход на карту</Link>
     </>
   );
 }
@@ -70,14 +70,14 @@ const handleCreateUser = async (payload) => {
             return  [
                 { to: "/users",   label: "Пользователи" },
                 { to: "/import",  label: "Загрузка данных" },
-                { to: "/map",     label: "Карта" },
-                { to: "/static",     label: "Димина карта" },
+//                { to: "/map",     label: "Карта" },
+                { to: "/static",  label: "Карта России" },
                 { to: "/profile", label: "Профиль" },
             ];
         } else {
             return [
-                { to: "/map",     label: "Карта" },
-                { to: "/static",     label: "Димина карта" },
+//                { to: "/map",     label: "Карта" },
+                { to: "/static",     label: "Карта России" },
                 { to: "/profile", label: "Профиль" },
             ];
 
@@ -99,7 +99,7 @@ const handleCreateUser = async (payload) => {
         <Routes>
           {isAdmin && <Route path="/users" element={<UsersAdmin users={users} loading={uLoading} error={uError} onRefresh={loadUsers} onDelete={handleDeleteUser} onCreate={handleCreateUser}/>} />}
           {isAdmin && <Route path="/import" element={<ImportData />} />}
-          <Route path="/map" element={<DroneRadarStub />} />
+//          <Route path="/map" element={<DroneRadarStub />} />
           <Route path="/static" element={<MapWithLegacyLink />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<Navigate to={defaultRoute} replace />} />
