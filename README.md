@@ -170,4 +170,4 @@ curl http://localhost:8080/static/data/png/weekly_by_city.png --output weekly_by
 ## Команда и вклад
 
 - **ashakaps** — Data Scientist, отвечала предобработку и анализ данных (`preprocessing.py`) в команде с **l00fi**, а также за разработку базы данных, её наполение и оформление документации.
-- **l00fi** - Data Scientist, отвечал за очистку данных, парсинг погодных условий (`preprocessing.py`, `weather_parser.py`) и визуализацию данных в команде с **angelinanana**.
+- **l00fi** - Data Scientist, отвечал за очистку данных, парсинг погодных условий (`preproc.py`, `weather_parser.py`) и визуализацию данных в команде с **angelinanana**.
