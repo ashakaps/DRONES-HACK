@@ -15,8 +15,32 @@ async function fetchJSON<T>(url: string): Promise<T> {
   return r.json();
 }
 
-const fetchCities = () => fetchJSON<IdName[]>("/geo/cities");
-const fetchRegions = () => fetchJSON<IdName[]>("/geo/regions");
+// Тип для GeoJSON городов
+type CityFC = FeatureCollection<
+  GeoJSON.Point,
+  { id: number | string; name: string }
+>;
+type RegionFC = FeatureCollection<
+  GeoJSON.MultiPolygon | GeoJSON.Polygon | GeoJSON.Point | GeoJSON.MultiPoint,
+  { id: number | string; name: string }
+>;
+
+async function fetchCities(): Promise<IdName[]> {
+  const fc = await fetchJSON<CityFC>("/geo/cities");
+  return (fc.features || [])
+    .map(f => f.properties)
+    .filter((p): p is { id: number | string; name: string } => !!p && p.id != null && !!p.name)
+    .map(p => ({ id: p.id, name: p.name }));
+}
+
+async function fetchRegions(): Promise<IdName[]> {
+  const fc = await fetchJSON<RegionFC>("/geo/regions");
+  return (fc.features || [])
+    .map(f => f.properties)
+    .filter((p): p is { id: number | string; name: string } => !!p && p.id != null && !!p.name)
+    .map(p => ({ id: p.id, name: p.name }));
+}
+
 
 /*
 const fetchFeatures = (city?: string, region?: string) => {
