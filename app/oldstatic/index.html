@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>DroneRadar</title>
+
+  <!-- Leaflet -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    crossorigin=""
+  />
+
+  <!-- Choices.js для поиска внутри select -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css"
+  />
+
+  <!-- Твои стили -->
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <link rel="stylesheet" href="/static/css/sidebar.css" />
+</head>
+<body>
+  <!-- Верхняя панель -->
+  <div id="topbar">
+    <span>DroneRadar</span>
+    <div>
+      <select id="city-select">
+        <option value="">Выберите город...</option>
+      </select>
+      <button id="btn-mode">Скачать отчет</button>
+    </div>
+  </div>
+
+  <!-- Карта -->
+  <div id="map"></div>
+
+
+
+<!-- Правый сайдбар (оставляем только один контейнер для него) -->
+<div id="sidebar">
+  <div class="sidebar-header">
+    <span id="sidebar-title">Регион</span>
+    <button class="sidebar-close">×</button>
+  </div>
+  <div id="sidebar-content">
+    <div id="chart-right-3" class="chart-slot"></div> <!-- Оставляем только третий -->
+  </div>
+</div>
+
+<!-- Левый верхний сайдбар (например, топ-10 регионов) -->
+<div id="sidebar-left-top" class="sidebar-box">
+  <div class="sidebar-header">
+    <span class="sidebar-title">Диаграмма 1</span>
+    <button class="sidebar-close">×</button>
+  </div>
+  <div class="sidebar-content">
+    <div id="chart-left-top" class="chart-slot"></div> <!-- сюда первый график -->
+  </div>
+</div>
+
+<!-- Левый нижний сайдбар (например, monthly_total) -->
+<div id="sidebar-left-bottom" class="sidebar-box">
+  <div class="sidebar-header">
+    <span class="sidebar-title">Диаграмма 2</span>
+    <button class="sidebar-close">×</button>
+  </div>
+  <div class="sidebar-content">
+    <div id="chart-left-bottom" class="chart-slot"></div> <!-- сюда второй график -->
+  </div>
+</div>
+
+
+
+  <!-- JS -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    crossorigin=""
+  ></script>
+  <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+  <script src="/static/js/sidebar.js"></script>
+  <script src="/static/js/main.js"></script>
+  <script src="/static/js/routes.js"></script>
+</body>
+</html>

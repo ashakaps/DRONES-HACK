@@ -3,6 +3,7 @@ import asyncio
 import logging
 from typing import Optional, Tuple, Dict, Any
 import asyncpg
+from sqlmodel import SQLModel, create_engine, Session
 
 log = logging.getLogger("db")
 
@@ -44,3 +45,17 @@ async def status() -> Dict[str, Any]:
         "dsn": _dsn,
         "pool_ready": bool(pool),
     }
+
+if _dsn and _dsn.startswith("sqlite"):
+    # Для SQLite оставляем старые настройки
+    engine = create_engine(_dsn, connect_args={"check_same_thread": False})
+else:
+    # Для PostgreSQL
+    engine = create_engine(_dsn)
+
+def init_db():
+    SQLModel.metadata.create_all(engine)
+
+def get_session():
+    with Session(engine) as session:
+        yield session
