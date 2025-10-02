@@ -165,7 +165,7 @@ insert into flight_season(flight_id, season_code) values (%s, %s)
 on conflict (flight_id) do update set season_code = excluded.season_code;
 """
 
-if __name__ == "__main__":
+def load_all_data():
     df = pd.read_excel(EXCEL_PATH, sheet_name=0)
 
     # приведение заголовков
@@ -356,3 +356,6 @@ if __name__ == "__main__":
     finally:
         cur.close()
         conn.close()
+
+if __name__ == "__main__":
+    load_all_data()
