@@ -58,7 +58,15 @@ function openPanelsForCity(name) {
 function loadChartsForCity(cityName) {
   openPanelsForCity(cityName);
   // Пока грузим только один график (правый сайдбар)
-  loadChart("chart-right-1", "weekly_by_city", cityName);
+  // верхний левый сайдбар
+  loadChart("chart-left-top", "top10_regions");
+
+  // нижний левый сайдбар
+  loadChart("chart-left-bottom", "monthly_total");
+
+  // правый сайдбар
+  loadChart("chart-right-3", "weekly_by_city", cityName);
+
   // Остальные вернёшь позже
   // loadChart("chart-left-top", "weekly_by_city", cityName);
   // loadChart("chart-left-bottom", "hourly_dayparts");
@@ -214,3 +222,25 @@ fetch("/geo/regions")
     });
   })
   .catch((err) => console.error("[DroneRadar] Ошибка загрузки /geo/regions:", err));
+document.getElementById("btn-mode").addEventListener("click", () => {
+  const citySelect = document.getElementById("city-select");
+  const city = citySelect.value || "Москва";
+
+  fetch(`/charts/report_json?city=${encodeURIComponent(city)}`)
+    .then(resp => resp.json())
+    .then(data => {
+      console.log("JSON отчёт:", data);
+
+      // скачивание в виде файла
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `report_${city}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    })
+    .catch(err => console.error("Ошибка загрузки отчёта:", err));
+});
