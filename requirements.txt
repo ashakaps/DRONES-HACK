@@ -4,6 +4,10 @@ pydantic[email]
 asyncpg
 python-dotenv
 
+requests
+bs4
+lxml
+
 pandas
 matplotlib
 seaborn

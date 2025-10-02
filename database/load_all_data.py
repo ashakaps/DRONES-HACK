@@ -7,6 +7,8 @@ import pandas as pd
 import psycopg2
 from database.config_base import *
 
+from database.prepoc import DataLoader
+
 _dsn = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@skeleton_restore-db-1:5432/droneradar")
 
 
@@ -62,6 +64,7 @@ def _to_py_date(d):
 def _combine_ts(dep_date, dep_time):
     d = _to_py_date(dep_date)
     t = _parse_time_like(dep_time)
+    print(d, t)
     if d is None and t is None:
         return None
     if d is None:
@@ -163,7 +166,9 @@ on conflict (flight_id) do update set season_code = excluded.season_code;
 """
 
 def load_all_data(filename):
-    df = pd.read_excel(filename, sheet_name=0)
+    loader = DataLoader(filename)
+
+    df = loader.preprocessing() # pd.read_excel(filename, sheet_name=0)
 
     # приведение заголовков
     cols = {src: dst for src, dst in COLUMN_MAP.items() if src in df.columns}
