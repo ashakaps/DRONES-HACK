@@ -82,12 +82,12 @@ export default function DroneRadar() {
   const [charts, setCharts] = useState<{ weekly_by_city?: string; hourly_dayparts?: string }>({});
 
   // Первичная загрузка справочников
-  useEffect(() => {
-    fetchCities().then((cities) => {
-        setCities(cities);
-        console.log("Loaded cities:", cities);
-    }).catch(console.error);
-    fetchRegions().then(setRegions).catch(console.error);
+  useEffect(async () => {
+      const [c,r] = await Promise.all([fetchCities(), fetchRegions()]);
+          console.log("cities:", c);
+    console.log("regions:", r);
+    setCities(c);
+    setRegions(r);
   }, []);
 
   // Загрузка фич и картинок

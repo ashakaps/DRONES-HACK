@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { TabsBar } from "../components/TabsBar.jsx";
 import UsersAdmin from "../components/UsersAdmin.jsx";
@@ -11,6 +11,16 @@ import "./Dashboard.css";
 
 // заглушки вкладок — подмени своими компонентами
 function ImportData() { return <div>Загрузка данных</div>; }
+function DroneRadarStub() { return <div>Будет карта. потом.</div>; }
+
+function MapWithLegacyLink() {
+  return (
+    <>
+        <Link to="/static/" reloadDocument>Димина карта</Link>
+    </>
+  );
+}
+
 
 function Logout() {
   localStorage.removeItem("token");
@@ -61,11 +71,13 @@ const handleCreateUser = async (payload) => {
                 { to: "/users",   label: "Пользователи" },
                 { to: "/import",  label: "Загрузка данных" },
                 { to: "/map",     label: "Карта" },
+                { to: "/static",     label: "Димина карта" },
                 { to: "/profile", label: "Профиль" },
             ];
         } else {
             return [
                 { to: "/map",     label: "Карта" },
+                { to: "/static",     label: "Димина карта" },
                 { to: "/profile", label: "Профиль" },
             ];
 
@@ -87,7 +99,8 @@ const handleCreateUser = async (payload) => {
         <Routes>
           {isAdmin && <Route path="/users" element={<UsersAdmin users={users} loading={uLoading} error={uError} onRefresh={loadUsers} onDelete={handleDeleteUser} onCreate={handleCreateUser}/>} />}
           {isAdmin && <Route path="/import" element={<ImportData />} />}
-          <Route path="/map" element={<DroneRadar />} />
+          <Route path="/map" element={<DroneRadarStub />} />
+          <Route path="/static" element={<MapWithLegacyLink />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<Navigate to={defaultRoute} replace />} />
         </Routes>

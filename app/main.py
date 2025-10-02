@@ -73,7 +73,7 @@ def get_routes():
 
 
 # статика
-app.mount("/oldstatic", StaticFiles(directory="/app/app/oldstatic", html=True), name="frontend")
+app.mount("/static", StaticFiles(directory="/app/app/oldstatic", html=True), name="frontend")
 app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True), name="frontend")
 
 
@@ -87,7 +87,7 @@ async def spa_fallback(request: Request, call_next):
         resp.status_code == 404
         and request.method == "GET"
         and not p.startswith("/api")
-        and not p.startswith("/oldstatic")
+        and not p.startswith("/static")
         and p not in ("/openapi.json", "/docs", "/redoc")
         and "text/html" in request.headers.get("accept", "")
         and INDEX_HTML.is_file()
