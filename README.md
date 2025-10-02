@@ -29,19 +29,19 @@
 
 ```
 ┌──────────────┐       HTTP/REST          ┌─────────────────────────────┐
-│  Frontend    │◀───────────────────────▶│  API Service (FastAPI)       │
-│  (React)     │                        │  • /api/auth/login, /me       │
-└──────────────┘                        │  • /api/users (admin)        │
-        ▲                               │  • /db/flight_count          │
-        │                               │  • /db/upload                │
-        │                               │  • /geo/regions, /geo/cities │
-        │                               │  • /charts/{name}, report    │
-        │                               └──────────────▲──────────────┘
-        │                                              │
+│  Frontend    │◀───────────────────────▶│  API Service (FastAPI)      │
+│  (React)     │                          │  • /api/auth/login, /me     │
+└──────────────┘                          │  • /api/users (admin)       │
+        ▲                                 │  • /db/flight_count         │
+        │                                 │  • /db/upload               │
+        │                                 │  • /geo/regions, /geo/cities│
+        │                                 │  • /charts/{name}, report   │
+        │                                 └──────────────▲──────────────┘
+        │                                                │
         │                                         asyncpg & SQLModel
-        │                                              ▼
+        │                                                ▼
 ┌──────────────┐                          ┌──────────────────────────┐
-│  ML Service  │─── HTTP/REST (future) ─▶│  PostGIS Database (DB)   │
+│  ML Service  │─── HTTP/REST (future) ─▶│  PostGIS Database (DB)    │
 │  (FastAPI)   │                          └──────────────────────────┘
 └──────────────┘
 ```
