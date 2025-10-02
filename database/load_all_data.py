@@ -2,19 +2,16 @@
 
 import math
 import datetime as dt
+import os
 import pandas as pd
 import psycopg2
-from config_base import *
+from database.config_base import *
+
+_dsn = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@skeleton_restore-db-1:5432/droneradar")
 
 
 def _conn():
-    return psycopg2.connect(
-        host=DB["host"],
-        port=DB["port"],
-        dbname=DB["dbname"],
-        user=DB["user"],
-        password=DB["password"],
-    )
+    return psycopg2.connect(_dsn)
 
 
 def _to_int_safe(x):
@@ -165,8 +162,8 @@ insert into flight_season(flight_id, season_code) values (%s, %s)
 on conflict (flight_id) do update set season_code = excluded.season_code;
 """
 
-def load_all_data():
-    df = pd.read_excel(EXCEL_PATH, sheet_name=0)
+def load_all_data(filename):
+    df = pd.read_excel(filename, sheet_name=0)
 
     # приведение заголовков
     cols = {src: dst for src, dst in COLUMN_MAP.items() if src in df.columns}
