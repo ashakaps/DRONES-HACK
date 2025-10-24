@@ -3,7 +3,7 @@ DB = {
     "port": 5432,
     "dbname": "drones",
     "user": "postgres",
-    "password": "vf11696580",
+    "password": "",
 }
 
 EXCEL_PATH = r"../data/data_clean.xlsx"
